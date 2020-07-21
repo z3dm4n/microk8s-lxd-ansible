@@ -5,14 +5,6 @@
 
   tasks:
 
-      - name: install "python3-apt"
-        apt:
-            name:
-                - python3-apt   # needed by ansible
-                - iptables      # needed by `microk8s inspect`
-            state: present
-            update_cache: "no"
-
       - name: run "apt-get update"
         apt:
             update_cache: "yes"
@@ -21,9 +13,11 @@
         apt:
             upgrade: dist
 
-      - name: install "snapd" package
+      - name: install packages
         apt:
-            package: snapd
+            pkg:
+                - iptables  # needed by `microk8s inspect`
+                - snapd
             state: present
 
       - name: install latest stable "microk8s" snap
