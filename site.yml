@@ -1,0 +1,4 @@
+# site.yml
+---
+- import_playbook: 01-setup-lxd.yml
+- import_playbook: 02-setup-microk8s.yml

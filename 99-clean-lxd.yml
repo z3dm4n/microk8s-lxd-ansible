@@ -1,0 +1,21 @@
+# 99-clean-lxd.yml
+---
+- hosts: localhost
+  # run this task in the host
+  connection: local
+  tasks:
+
+    - name: delete containers
+      # get all host names from inventory
+      loop: "{{ groups['all'] }}"
+      # use lxd_container module from ansible
+      lxd_container:
+        # container name is the hostname
+        name: "{{ item }}"
+        state: absent
+        timeout: 600
+
+    - name: delete "microk8s" profile
+      lxd_profile:
+        name: microk8s
+        state: absent

@@ -1,0 +1,9 @@
+# inventory/hosts
+[nodes]
+n1  ip_address=10.37.17.100
+n2  ip_address=10.37.17.101
+n3  ip_address=10.37.17.102
+
+[all:vars]
+ansible_connection=lxd
+ansible_python_interpreter=/usr/bin/python3

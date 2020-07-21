@@ -1,0 +1,63 @@
+# 01-setup-lxd.yml
+---
+- hosts: localhost
+  # run this task in the host
+  connection: local
+  tasks:
+
+    - name: create "microk8s" profile
+      # https://github.com/ubuntu/microk8s/blob/master/tests/lxc/microk8s.profile
+      lxd_profile:
+        name: microk8s
+        config:
+          boot.autostart: "true"
+          linux.kernel_modules: ip_vs,ip_vs_rr,ip_vs_wrr,ip_vs_sh,ip_tables,ip6_tables,netlink_diag,nf_nat,overlay,br_netfilter
+          raw.lxc: |
+            lxc.apparmor.profile=unconfined
+            lxc.mount.auto=proc:rw sys:rw cgroup:rw
+            lxc.cgroup.devices.allow=a
+            lxc.cap.drop=
+          security.nesting: "true"
+          security.privileged: "true"
+        description: "microk8s profile"
+        devices:
+          aadisable:
+            path: /sys/module/nf_conntrack/parameters/hashsize
+            source: /sys/module/nf_conntrack/parameters/hashsize
+            type: disk
+          aadisable1:
+            path: /sys/module/apparmor/parameters/enabled
+            source: /dev/null
+            type: disk
+          aadisable2:
+            path: /dev/kmsg
+            source: /dev/kmsg
+            type: disk
+        snap_url: unix:/var/snap/lxd/common/lxd/unix.socket
+
+    - name: create containers
+      # get all host names from inventory
+      loop: "{{ groups['all'] }}"
+      # use lxd_container module from ansible
+      lxd_container:
+        # container name is the hostname
+        name: "{{ item }}"
+        state: started
+        source:
+          type: image
+          mode: pull
+          server: https://images.linuxcontainers.org
+          alias: ubuntu/focal/amd64
+        devices:
+          # configure network interface
+          eth0:
+            type: nic
+            nictype: bridged
+            parent: lxdbr0
+            # get ip address from inventory
+            ipv4.address: "{{ hostvars[item].ip_address }}"
+        # if you installed lxd using snap
+        snap_url: unix:/var/snap/lxd/common/lxd/unix.socket
+        profiles: ["default", "microk8s"]
+        wait_for_ipv4_addresses: true
+        timeout: 600

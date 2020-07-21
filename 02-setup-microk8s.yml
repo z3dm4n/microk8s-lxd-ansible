@@ -1,0 +1,65 @@
+# 02-setup-microk8s.yml
+---
+- hosts: nodes
+  gather_facts: "no"
+
+  tasks:
+
+      - name: install "python3-apt"
+        apt:
+            name:
+                - python3-apt   # needed by ansible
+                - iptables      # needed by `microk8s inspect`
+            state: present
+            update_cache: "no"
+
+      - name: run "apt-get update"
+        apt:
+            update_cache: "yes"
+
+      - name: update all packages to the latest
+        apt:
+            upgrade: dist
+
+      - name: install "snapd" package
+        apt:
+            package: snapd
+            state: present
+
+      - name: install latest stable "microk8s" snap
+        snap:
+            name: microk8s
+            channel: latest
+            classic: "yes"
+            state: present
+        notify:
+            - enable snapd
+            - restart snapd
+            - enable microk8s
+            - create alias k
+            - create alias kubectl
+            - create alias helm
+
+  handlers:
+
+      - name: enable snapd
+        service:
+            name: snapd
+            enabled: "yes"
+
+      - name: restart snapd
+        service:
+            name: snapd
+            state: restarted
+
+      - name: enable microk8s
+        command: /snap/bin/microk8s.enable dns storage helm3
+
+      - name: create alias k
+        command: snap alias microk8s.kubectl k
+
+      - name: create alias kubectl
+        command: snap alias microk8s.kubectl kubectl
+
+      - name: create alias helm
+        command: snap alias microk8s.helm3 helm
