@@ -30,6 +30,9 @@
             - enable snapd
             - restart snapd
             - enable microk8s
+            - create drop-in directory
+            - copy systemd drop-in file
+            - copy workaround script
             - create alias k
             - create alias kubectl
             - create alias helm
@@ -45,6 +48,30 @@
         service:
             name: snapd
             state: restarted
+
+      - name: create drop-in directory
+        file:
+            path: /etc/systemd/system/snap.microk8s.daemon-apiserver-kicker.service.d
+            state: directory
+            mode: '0755'
+
+      - name: copy systemd drop-in file
+        copy:
+            src: files/etc_systemd_system_snap.microk8s.daemon-apiserver-kicker.service.d_override.conf
+            dest: /etc/systemd/system/snap.microk8s.daemon-apiserver-kicker.service.d/override.conf
+            checksum: 32f2dbcfdbcef326a40d2cda2bbdd404e21766a5
+            owner: root
+            group: root
+            mode: '0644'
+
+      - name: copy workaround script
+        copy:
+            src: files/usr_local_sbin_lxd-snap-workaround.sh
+            dest: /usr/local/sbin/lxd-snap-workaround.sh
+            checksum: 333f7de804c219636ceb543ff92633511bc68f72
+            owner: root
+            group: root
+            mode: '0700'
 
       - name: enable microk8s
         command: /snap/bin/microk8s.enable dns storage helm3
